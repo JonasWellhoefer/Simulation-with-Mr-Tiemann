@@ -29,3 +29,5 @@ Deliverables:
 |        |       |
 
 *Note: The lecture slides are not meant to be shared outside ISM (see imprint), so they are not included in this repo.*
+
+<!-- PR/merge test: harmless change -->
