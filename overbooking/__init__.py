@@ -1,1 +1,0 @@
-"""Hotel overbooking simulation."""
