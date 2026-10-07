@@ -1,31 +1,31 @@
-# Simulation – Prüfungsprojekt (Mr. Tiemann, ISM)
+# Simulation – Exam Project (Mr. Tiemann, ISM)
 
-## Aufgabe (laut Folie "Exam")
-- Prüfungsform: Präsentation, ca. 45 Minuten
-- Gruppen mit 2–3 Personen (max. 3)
-- Präsentationstermine: 19.11. und 26.11. – **Gruppen bis spätestens 9.11. melden**
+## Task (per the "Exam" slide)
+- Exam type: presentation, roughly 45 minutes
+- Groups of 2–3 people (no more than 3)
+- Presentation dates: Nov 19 and Nov 26 – **groups must be reported by Nov 9 at the latest**
 
-Zu liefern:
-1. Passende Simulation auswählen, programmieren, dokumentieren, präsentieren
-2. Simulation beschreiben: Zweck und Mehrwert
-3. Code erklären (Walkthrough)
-4. Simulation live laufen lassen
-5. Ergebnisse erklären und interpretieren
-6. Wenn möglich: Ergebnisse mit analytischen Wahrscheinlichkeiten abgleichen
-7. Beitrag jedes Gruppenmitglieds klar kenntlich machen
+Deliverables:
+1. Pick an appropriate simulation, code it, document it, present it
+2. Describe the simulation: its purpose and added value
+3. Walk through the code
+4. Run the simulation live
+5. Explain and interpret the results
+6. If possible, match the simulation results against analytical probabilities
+7. Make clear how and what every group member contributed
 
 ## Status
-- [ ] Gruppe festlegen (bis 9.11.)
-- [ ] Thema wählen (offen)
-- [ ] Sprache: überwiegend Python, evtl. Julia
-- [ ] Simulation implementieren
-- [ ] Validierung gegen analytische Werte
-- [ ] Präsentation erstellen
-- [ ] Beitragsübersicht pro Person
+- [ ] Form group (by Nov 9)
+- [ ] Choose topic (open)
+- [ ] Language: mainly Python, possibly Julia
+- [ ] Implement simulation
+- [ ] Validate against analytical values
+- [ ] Build presentation
+- [ ] Contribution overview per person
 
-## Beitragsübersicht
-| Person | Aufgaben |
-|--------|----------|
-|        |          |
+## Contributions
+| Person | Tasks |
+|--------|-------|
+|        |       |
 
-*Hinweis: Die Vorlesungsfolien sind laut Impressum nicht zur Weitergabe gedacht und liegen deshalb nicht im Repo.*
+*Note: The lecture slides are not meant to be shared outside ISM (see imprint), so they are not included in this repo.*
