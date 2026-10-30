@@ -23,6 +23,29 @@ Deliverables:
 - [ ] Build presentation
 - [ ] Contribution overview per person
 
+## Model core (`hotel_sim/`)
+```
+pip install -r requirements.txt
+python examples/run_example.py   # overbooking level x correlated no-shows
+pytest
+```
+Interface for the dashboard:
+```python
+from dataclasses import replace
+from hotel_sim import Params, simulate, run_replications, sweep
+
+params = Params(overbooking_level=0.12, shock_cv=0.3)
+run = simulate(params, seed=1)           # nightly arrays: occupied, denied, profit, ...
+study = run_replications(params, 30)     # means, 95% CIs, VaR/CVaR of nightly profit
+curve = sweep(params, "overbooking_level", [0, .05, .1, .15, .2])
+```
+- `params.py` – all inputs (`Params`, customer `Segment`s); dashboard sliders map 1:1 to fields
+- `model.py` – event-based simulation (2.1 booking/cancellation dynamics, multi-night stays,
+  walk-ins; 2.2 segments, groups, shared no-show shock `shock_cv`)
+- `experiments.py` – replications with confidence intervals, risk measures, parameter sweeps
+- `analytic.py` + `Params.binomial_baseline()` – the degenerate case reproduces the exact
+  binomial results (validation test in `tests/`)
+
 ## Contributions
 | Person | Tasks |
 |--------|-------|
