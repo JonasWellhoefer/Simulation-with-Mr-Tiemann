@@ -16,7 +16,7 @@ Deliverables:
 
 ## Status
 - [ ] Form group (by Nov 9)
-- [ ] Choose topic (open)
+- [x] Choose topic: hotel overbooking (scope: PROPOSAL.md 2.1 + 2.2, interactive dashboard)
 - [ ] Language: mainly Python, possibly Julia
 - [ ] Implement simulation
 - [ ] Validate against analytical values
@@ -26,8 +26,8 @@ Deliverables:
 ## Contributions
 | Person | Tasks |
 |--------|-------|
-|        |       |
+| Jonas, Vrinda | Code (model, dashboard) |
+| Viveca | Presentation |
 
 *Note: The lecture slides are not meant to be shared outside ISM (see imprint), so they are not included in this repo.*
 
-<!-- PR/merge test: harmless change -->
