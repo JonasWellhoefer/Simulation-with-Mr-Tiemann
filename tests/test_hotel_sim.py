@@ -1,6 +1,7 @@
 from dataclasses import replace
 
 import numpy as np
+import pytest
 
 from hotel_sim import Params, run_replications, simulate
 from hotel_sim import analytic
@@ -40,3 +41,7 @@ def test_shared_shock_increases_risk():
     shocked = run_replications(replace(base, shock_cv=0.5), n_runs=12, seed=5)
     assert shocked["mean_denied"]["mean"] > plain["mean_denied"]["mean"]
     assert shocked["cvar_5"] < plain["cvar_5"]
+def test_invalid_capacity():
+    for capacity in [0, -5, 30.5, True]:
+        with pytest.raises(ValueError):
+            Params(capacity=capacity)

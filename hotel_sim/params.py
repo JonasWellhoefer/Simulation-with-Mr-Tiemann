@@ -58,7 +58,9 @@ class Params:
     # --- simulation horizon -------------------------------------------------
     n_days: int = 180                 # evaluated nights
     warmup_days: int = 10             # discarded start-up nights
-
+    def __post_init__(self):
+        if type(self.capacity) is not int or self.capacity <= 0:
+            raise ValueError("Capacity must be a positive integer.")
     @property
     def booking_limit(self) -> int:
         return int(self.capacity * (1 + self.overbooking_level) + 1e-9)
