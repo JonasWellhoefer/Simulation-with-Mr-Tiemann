@@ -6,6 +6,8 @@ tweaks) and call ``simulate`` / ``run_replications``.
 """
 from dataclasses import dataclass, field
 from typing import Tuple
+from numbers import Integral
+from math import isfinite
 
 
 @dataclass(frozen=True)
@@ -57,8 +59,57 @@ class Params:
 
     # --- simulation horizon -------------------------------------------------
     n_days: int = 180                 # evaluated nights
-    warmup_days: int = 10             # discarded start-up nights
+    warmup_days: int = 10   # discarded start-up nights
+    def __post_init__(self):
+        if (
+            not isinstance(self.capacity, Integral)
+            or isinstance(self.capacity, bool)
+            or self.capacity <= 0
+        ):
+            raise ValueError(
+                f"capacity must be a positive integer, got {self.capacity!r}"
+            )
 
+        if (
+            not isfinite(self.overbooking_level)
+            or self.overbooking_level < -1
+        ):
+            raise ValueError(
+                "overbooking_level must be finite and at least -1, "
+                f"got {self.overbooking_level!r}"
+            )
+
+        if not isfinite(self.shock_cv) or self.shock_cv < 0:
+            raise ValueError(
+                "shock_cv must be finite and non-negative, "
+                f"got {self.shock_cv!r}"
+            )
+
+        if (
+            not isinstance(self.n_days, Integral)
+            or isinstance(self.n_days, bool)
+            or self.n_days <= 0
+        ):
+            raise ValueError(
+                f"n_days must be a positive integer, got {self.n_days!r}"
+            )
+
+        if not self.segments:
+            raise ValueError("segments must contain at least one segment")
+
+        for segment in self.segments:
+            if not isfinite(segment.share) or segment.share < 0:
+                raise ValueError(
+                    f"share for segment {segment.name!r} must be finite "
+                    f"and non-negative, got {segment.share!r}"
+                )
+
+        total_share = sum(segment.share for segment in self.segments)
+        if not isfinite(total_share) or total_share <= 0:
+            raise ValueError(
+                "segment shares must have a finite, positive total"
+            )
+        
     @property
     def booking_limit(self) -> int:
         return int(self.capacity * (1 + self.overbooking_level) + 1e-9)
