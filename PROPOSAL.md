@@ -1,6 +1,6 @@
 # Project Proposal: Hotel Overbooking Simulation
 
-*Status: draft for team discussion – nothing in here is implemented yet.*
+*Status: scope agreed with the team – nothing in here is implemented yet.*
 
 ## 1. Motivation and added value
 Hotels sell more rooms than they have because some guests do not show up. Too little
@@ -49,16 +49,20 @@ exact binomial results. Extensions are compared against this baseline to quantif
 - Interpretation of the results and comparison with the analytical probabilities
 - Contribution table per team member (see README)
 
-## 5. Open questions for the team
-- Which extensions do we commit to? (Suggestion: 2.1 + 2.2 + the statistics parts of 2.3)
-- Python only, or Julia for performance-critical parts?
-- How do we split the work?
-- Do we want an interactive demo (sliders) for the presentation?
+## 5. Decisions (team discussion)
+- **Scope:** extensions 2.1 (dynamics over time) and 2.2 (more realistic randomness).
+  Parts of 2.3 (confidence intervals, sensitivity) only as needed to interpret results.
+- **Final deliverable:** an interactive dashboard to run and explore the simulation live.
+- **Language:** Python (Julia only if a clear need appears).
 
-## 6. Suggested split (to be discussed)
+## 6. Roles
 | Area | Owner |
 |------|-------|
-| Dynamic booking/cancellation model |  |
-| Correlated no-shows, groups, segments |  |
-| Statistics, validation, sensitivity |  |
-| Presentation and documentation |  |
+| Code: simulation model, dashboard | Jonas, Vrinda |
+| Presentation | Viveca |
+
+## 7. Still open
+- Split of the code work between the two developers (model vs. dashboard)
+- Dashboard framework (e.g. Streamlit)
+- Shared interface between model and dashboard (parameters in, results out)
+- Group registration (deadline Nov 9)
