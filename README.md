@@ -53,4 +53,18 @@ curve = sweep(params, "overbooking_level", [0, .05, .1, .15, .2])
 | Viveca | Presentation |
 
 *Note: The lecture slides are not meant to be shared outside ISM (see imprint), so they are not included in this repo.*
+## Interactive dashboard
+
+Install the dependencies and launch the dashboard from the project folder:
+
+```bash
+python3 -m pip install -r requirements.txt
+python3 -m streamlit run dashboard.py
+```
+
+Choose the room capacity, overbooking allowance, simulation days, number
+of runs and shared no-show shock strength, then click **Run simulation**.
+
+The dashboard displays average nightly profit, occupancy, nights with
+denied rooms, a results table and a profit chart by simulation run.
 
