@@ -46,6 +46,18 @@ curve = sweep(params, "overbooking_level", [0, .05, .1, .15, .2])
 - `analytic.py` + `Params.binomial_baseline()` – the degenerate case reproduces the exact
   binomial results (validation test in `tests/`)
 
+## Analysis (`analysis/`)
+```
+python analysis/run_analysis.py           # full run, about 2-3 minutes
+python analysis/run_analysis.py --quick   # low precision, for testing
+```
+Writes figures and `results.md` to `analysis/output/`:
+1. validation against the exact binomial model
+2. optimal overbooking level, denial risk and CVaR, with and without correlated no-shows
+3. textbook binomial formula vs. simulated optimum
+4. sensitivity of the optimal level to no-show rate and denied cost
+5. convergence of the estimate over the number of runs
+
 ## Contributions
 | Person | Tasks |
 |--------|-------|
