@@ -15,15 +15,16 @@ Deliverables:
 7. Make clear how and what every group member contributed
 
 ## Status
-- [ ] Form group (by Nov 9)
+- [x] Form group (by Nov 9)
 - [x] Choose topic: hotel overbooking (scope: PROPOSAL.md 2.1 + 2.2, interactive dashboard)
 - [x] Language: Python
 - [x] Implement simulation (`hotel_sim/`, extensions 2.1 + 2.2)
 - [x] Validate against analytical values (binomial comparison + chi-square test)
 - [x] Sources for the model assumptions (ASSUMPTIONS.md)
-- [ ] Interactive dashboard
+- [x] Interactive dashboard (`dashboard.py`)
 - [ ] Build presentation
-- [ ] Contribution overview per person
+- [x] Contribution overview per person
+- [x] Code walkthrough guide for the presentation (docs/CODE_WALKTHROUGH.md)
 
 ## Model core (`hotel_sim/`)
 ```
@@ -58,17 +59,22 @@ Writes figures and `results.md` to `analysis/output/`:
 1. validation against the exact binomial model, incl. a chi-square goodness-of-fit test
 2. optimal overbooking level, denial risk and CVaR, with and without correlated no-shows
 3. textbook binomial formula vs. simulated optimum
-4. sensitivity of the optimal level to no-show rate and denied cost
+4. sensitivity of the optimal level to cancellation rate and denied cost
 5. convergence of the estimate over the number of runs
 
 `analysis/calibrate_from_data.py` reproduces the segment parameters from the public
 hotel booking dataset (see ASSUMPTIONS.md).
 
 ## Contributions
-| Person | Tasks |
-|--------|-------|
-| Jonas, Vrinda | Code (model, dashboard) |
-| Viveca | Presentation |
+| Person | Contributions | Main files / pull requests |
+|--------|---------------|----------------------------|
+| Jonas | Project setup and coordination, simulation model (booking dynamics, segments, correlated no-shows), calibration with real hotel data and sources, statistical analysis (validation, chi-square test, sensitivity, confidence intervals), dashboard extensions (overbooking comparison, market assumptions), code reviews | `hotel_sim/`, `analysis/`, `ASSUMPTIONS.md`, `docs/CODE_WALKTHROUGH.md`; PRs 5, 8, 9 |
+| Vrinda | Input validation with tests, interactive Streamlit dashboard (controls, results table, charts), code review of the model | `hotel_sim/params.py` (validation), `tests/`, `dashboard.py`; PRs 6, 7 |
+| Viveca | Presentation: slides, structure, code walkthrough and live demo | presentation; `docs/CODE_WALKTHROUGH.md` as preparation |
+
+Jonas's code was developed with the AI coding assistant Claude Code; the commits are marked
+with "Co-Authored-By". The full history of who changed what is in the
+[pull requests](https://github.com/JonasWellhoefer/Simulation-with-Mr-Tiemann/pulls?q=is%3Apr).
 
 *Note: The lecture slides are not meant to be shared outside ISM (see imprint), so they are not included in this repo.*
 

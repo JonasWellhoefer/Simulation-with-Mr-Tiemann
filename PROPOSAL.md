@@ -1,6 +1,6 @@
 # Project Proposal: Hotel Overbooking Simulation
 
-*Status: scope agreed with the team; 2.1 and 2.2 are implemented in `hotel_sim/`, the analysis in `analysis/`, the dashboard is in progress (see section 7).*
+*Status: 2.1 and 2.2 are implemented in `hotel_sim/`, the analysis in `analysis/`, the dashboard in `dashboard.py`; the presentation is in progress (see section 7).*
 
 ## 1. Motivation and added value
 Hotels sell more rooms than they have because some guests do not show up. Too little
@@ -58,8 +58,11 @@ exact binomial results. Extensions are compared against this baseline to quantif
 ## 6. Roles
 | Area | Owner |
 |------|-------|
-| Code: simulation model, dashboard | Jonas, Vrinda |
-| Presentation | Viveca |
+| Simulation model, calibration, analysis | Jonas |
+| Input validation, dashboard | Vrinda |
+| Presentation incl. code walkthrough and live demo | Viveca |
+
+Details: see the contribution table in the README.
 
 ## 7. Status
 Done:
@@ -70,8 +73,9 @@ Done:
   convergence
 - Dashboard framework: Streamlit
 - Model assumptions based on real hotel data and industry sources (ASSUMPTIONS.md)
+- Dashboard with overbooking comparison and market assumptions
+- Group registration
+- Code walkthrough guide for the presentation (docs/CODE_WALKTHROUGH.md)
 
 Open:
-- Dashboard: profit vs. overbooking chart and further controls
 - Presentation
-- Group registration (deadline Nov 9)
