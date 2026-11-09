@@ -30,11 +30,20 @@ def ci_err(res, metric):
     return (hi - lo) / 2
 
 
-def scaled_noshow(params, factor):
-    """Copy of params with every segment's no-show probability scaled."""
-    segs = tuple(replace(s, noshow_prob=min(1.0, s.noshow_prob * factor))
-                 for s in params.segments)
-    return replace(params, segments=segs)
+def scaled_cancellations(params, factor):
+    """Copy of params with every segment's cancellation probability scaled.
+    Booking requests are scaled too, so that the number of bookings that are
+    *not* cancelled stays the same: only the cancellation effect changes."""
+    shares = np.array([s.share for s in params.segments])
+    shares = shares / shares.sum()
+    cancel = np.array([s.cancel_prob for s in params.segments])
+    new_cancel = np.minimum(1.0, cancel * factor)
+    segs = tuple(replace(s, cancel_prob=float(c))
+                 for s, c in zip(params.segments, new_cancel))
+    kept_before = float(np.dot(shares, 1 - cancel))
+    kept_after = float(np.dot(shares, 1 - new_cancel))
+    return replace(params, segments=segs,
+                   demand_rate=params.demand_rate * kept_before / kept_after)
 
 
 # --------------------------------------------------------------------------
@@ -157,7 +166,7 @@ def goodness_of_fit(cfg, report):
 # 2. Optimal overbooking level with and without correlated no-shows
 # --------------------------------------------------------------------------
 def optimum_and_risk(cfg, report):
-    levels = np.round(np.arange(0.0, 0.301, 0.025), 3)
+    levels = np.round(np.arange(0.0, 0.251, 0.025), 3)
     shocks = (0.0, 0.3, 0.6)
     base = Params(n_days=cfg["days"])
     rows = {}
@@ -243,14 +252,14 @@ def naive_vs_simulation(cfg, report, rows, levels):
 # 4. Sensitivity: optimal level vs. no-show rate and denied cost
 # --------------------------------------------------------------------------
 def sensitivity(cfg, report):
-    factors = (0.5, 1.0, 1.5, 2.0)
+    factors = (0.5, 0.75, 1.0, 1.25, 1.5)
     costs = (100.0, 250.0, 500.0, 1000.0)
-    levels = np.round(np.arange(0.0, 0.401, 0.05), 3)
+    levels = np.round(np.arange(0.0, 0.301, 0.025), 3)
     base = Params(n_days=cfg["days"])
     grid = np.zeros((len(costs), len(factors)))
     for i, c in enumerate(costs):
         for j, f in enumerate(factors):
-            p = scaled_noshow(replace(base, denied_cost=c), f)
+            p = scaled_cancellations(replace(base, denied_cost=c), f)
             prof = [run_replications(replace(p, overbooking_level=lv),
                                      n_runs=cfg["sens_runs"], seed=SEED)["mean_profit"]["mean"]
                     for lv in levels]
@@ -260,31 +269,34 @@ def sensitivity(cfg, report):
     im = ax.imshow(grid * 100, cmap="viridis", origin="lower", aspect="auto")
     ax.set_xticks(range(len(factors)), [f"x{f}" for f in factors])
     ax.set_yticks(range(len(costs)), [f"{c:.0f}" for c in costs])
-    ax.set(xlabel="No-show rate (relative to default)", ylabel="Cost per denied room",
+    ax.set(xlabel="Cancellation rate (relative to default)", ylabel="Cost per denied room",
            title="Optimal overbooking level (%)")
     for i in range(len(costs)):
         for j in range(len(factors)):
-            ax.text(j, i, f"{grid[i, j] * 100:.0f}", ha="center", va="center", color="white")
+            ax.text(j, i, f"{grid[i, j] * 100:.1f}", ha="center", va="center", color="white")
     fig.colorbar(im, ax=ax, label="%")
     fig.tight_layout()
     fig.savefig(OUT / "04_sensitivity.png", dpi=150)
     plt.close(fig)
 
     report.append("## 4. Sensitivity of the optimal overbooking level\n")
-    report.append(f"Grid search over levels 0-40% in 5% steps, {cfg['sens_runs']} runs per point.\n")
-    report.append("| Denied cost \\ no-show factor | " + " | ".join(f"x{f}" for f in factors) + " |")
+    report.append(f"Grid search over levels 0-30% in 2.5% steps, {cfg['sens_runs']} runs per "
+                  "point. The cancellation rate is varied because it drives overbooking far "
+                  "more than the no-show rate (~2% in the data). Booking requests are "
+                  "scaled so that the number of non-cancelled bookings stays the same.\n")
+    report.append("| Denied cost \\ cancellation factor | " + " | ".join(f"x{f}" for f in factors) + " |")
     report.append("|---:|" + "---:|" * len(factors))
     for i, c in enumerate(costs):
-        report.append(f"| {c:.0f} | " + " | ".join(f"{g:.0%}" for g in grid[i]) + " |")
-    report.append("\nMore no-shows push the optimal level up, higher compensation "
+        report.append(f"| {c:.0f} | " + " | ".join(f"{g:.1%}" for g in grid[i]) + " |")
+    report.append("\nMore cancellations push the optimal level up, higher compensation "
                   "costs push it down.\n")
 
 
 # --------------------------------------------------------------------------
 # 5. Convergence: how many runs do we need?
 # --------------------------------------------------------------------------
-def convergence(cfg, report):
-    p = Params(n_days=cfg["days"], overbooking_level=0.15)
+def convergence(cfg, report, level):
+    p = Params(n_days=cfg["days"], overbooking_level=level)
     res = run_replications(p, n_runs=cfg["conv_runs"], seed=SEED)
     runs = res["mean_profit"]["runs"]
     ns = np.arange(2, len(runs) + 1)
@@ -295,7 +307,7 @@ def convergence(cfg, report):
     ax.plot(ns, means, label="Running mean")
     ax.fill_between(ns, means - half, means + half, alpha=0.3, label="95% CI")
     ax.set(xlabel="Number of simulation runs", ylabel="Mean profit per night",
-           title="Convergence of the estimate (overbooking 15%)")
+           title=f"Convergence of the estimate (overbooking {level:.1%})")
     ax.legend()
     fig.tight_layout()
     fig.savefig(OUT / "05_convergence.png", dpi=150)
@@ -330,13 +342,13 @@ def main():
     print("[chi-square test]", flush=True)
     goodness_of_fit(cfg, report)
     print("[optimum and risk]", flush=True)
-    rows, levels, _ = optimum_and_risk(cfg, report)
+    rows, levels, best = optimum_and_risk(cfg, report)
     print("[textbook vs simulation]", flush=True)
     naive_vs_simulation(cfg, report, rows, levels)
     print("[sensitivity]", flush=True)
     sensitivity(cfg, report)
     print("[convergence]", flush=True)
-    convergence(cfg, report)
+    convergence(cfg, report, best[0.0])
 
     (OUT / "results.md").write_text("\n".join(report) + "\n")
     print(f"Done. See {OUT / 'results.md'} and the PNG files next to it.")

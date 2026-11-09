@@ -35,14 +35,20 @@ def test_capacity_never_exceeded():
 
 
 def test_shared_shock_increases_risk():
-    """Correlated no-shows: same mean, heavier tail -> more denied guests."""
-    base = Params(overbooking_level=0.12, n_days=120)
-    plain = run_replications(base, n_runs=12, seed=5)
-    shocked = run_replications(replace(base, shock_cv=0.5), n_runs=12, seed=5)
-    assert shocked["mean_denied"]["mean"] > plain["mean_denied"]["mean"]
-    assert shocked["cvar_5"] < plain["cvar_5"]
+    """Correlated no-shows: same mean, but arrivals vary more than the
+    binomial model allows, so more guests are denied. Checked in the
+    baseline case (110 single-room bookings per night, show rate 0.9),
+    where arrivals without shock have variance 110 * 0.9 * 0.1 = 9.9."""
+    base = Params.binomial_baseline(bookings=110, show_prob=0.9, n_days=800)
+    plain = simulate(base, seed=5)
+    shocked = simulate(replace(base, shock_cv=0.3), seed=5)
+    arrivals_plain = plain.occupied + plain.denied
+    arrivals_shocked = shocked.occupied + shocked.denied
+    assert abs(arrivals_shocked.mean() - arrivals_plain.mean()) < 0.5
+    assert arrivals_shocked.var() > 1.5 * arrivals_plain.var()
+    assert shocked.denied.mean() > plain.denied.mean()
 
-    
+
 @pytest.mark.parametrize("capacity", [0, -5, 30.5, True])
 def test_invalid_capacity(capacity):
     with pytest.raises(ValueError) as error:

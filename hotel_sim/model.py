@@ -7,7 +7,8 @@ Process
 1. **Demand (2.1).** For every arrival day a Poisson number of booking
    requests is generated (weekday/season pattern). Each request has a
    segment, a lead time, a length of stay, a size (1 room or a group) and
-   may be cancelled later (cancellations cluster shortly before arrival).
+   may be cancelled later (timing between booking and arrival ~ Beta, fitted
+   to real hotel data: many cancel soon after booking, some just before arrival).
 2. **Booking phase.** Requests and cancellations are processed in time
    order. A request is accepted if on every night of the stay the rooms on
    the books stay <= ``booking_limit``. Cancellations free capacity again.
@@ -91,9 +92,9 @@ def simulate(params: Params, seed=None) -> RunResult:
                      1)
     cancels = rng.random(n) < per_seg("cancel_prob")
     t_book = arrival - lead
-    # cancellation time: Beta(3,1) share of the way from booking to arrival,
-    # i.e. cancellations cluster shortly before arrival
-    t_cancel = t_book + rng.beta(3, 1, size=n) * lead
+    # cancellation time: Beta(a, b) share of the way from booking to arrival
+    t_cancel = t_book + rng.beta(params.cancel_timing_a, params.cancel_timing_b,
+                                 size=n) * lead
 
     # ---- 2. booking phase -------------------------------------------
     nights = T + int(stay.max() if n else 1) + 1

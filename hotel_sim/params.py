@@ -24,13 +24,18 @@ class Segment:
     group_size_mean: float = 3.0  # rooms of a group, = 2 + Poisson(mean - 2)
 
 
+# Segment behaviour from the city hotel in Antonio, de Almeida & Nunes (2019),
+# "Hotel booking demand datasets", Data in Brief 22, 41-49 (own calculation,
+# see ASSUMPTIONS.md). business = Corporate + Aviation, leisure = Direct +
+# Offline TA/TO + Groups, online portal = Online TA. Online portal price is the
+# average rate (118) minus 15% commission. Groups (10%, 3 rooms) are an assumption.
 DEFAULT_SEGMENTS = (
-    Segment("business", 0.35, 140.0, noshow_prob=0.08, cancel_prob=0.15,
-            mean_stay=2.0, mean_lead=10.0),
-    Segment("leisure", 0.40, 110.0, noshow_prob=0.10, cancel_prob=0.25,
-            mean_stay=3.0, mean_lead=30.0, group_prob=0.10, group_size_mean=3.0),
-    Segment("online portal", 0.25, 90.0, noshow_prob=0.18, cancel_prob=0.40,
-            mean_stay=2.0, mean_lead=20.0),
+    Segment("business", 0.05, 84.0, noshow_prob=0.022, cancel_prob=0.198,
+            mean_stay=2.02, mean_lead=16.7),
+    Segment("leisure", 0.45, 99.0, noshow_prob=0.020, cancel_prob=0.474,
+            mean_stay=2.85, mean_lead=102.1, group_prob=0.10, group_size_mean=3.0),
+    Segment("online portal", 0.50, 100.0, noshow_prob=0.018, cancel_prob=0.362,
+            mean_stay=3.11, mean_lead=72.0),
 )
 
 
@@ -42,12 +47,17 @@ class Params:
     denied_cost: float = 250.0        # compensation per room that cannot be provided
 
     # --- demand (2.1 dynamics) --------------------------------------------
-    demand_rate: float = 62.0         # mean booking requests per arrival day
+    demand_rate: float = 38.0         # mean booking requests per arrival day (calibrated
+                                      # to ~73% occupancy, see ASSUMPTIONS.md)
     weekday_factors: Tuple[float, ...] = (0.90, 0.95, 1.00, 1.05, 1.20, 1.25, 0.95)
-    season_amplitude: float = 0.0     # relative amplitude of a sinusoidal season
+    season_amplitude: float = 0.3     # relative amplitude of a sinusoidal season
     season_length: int = 90           # days per season cycle
     walkin_rate: float = 2.0          # mean walk-in guests per night (fill free rooms)
     walkin_price: float = 100.0
+    # timing of a cancellation as Beta(a, b) share of the way from booking to
+    # arrival; fitted to the cancellations in Antonio et al. (2019)
+    cancel_timing_a: float = 0.41
+    cancel_timing_b: float = 0.70
 
     segments: Tuple[Segment, ...] = DEFAULT_SEGMENTS
 
@@ -78,6 +88,11 @@ class Params:
                 "overbooking_level must be finite and at least -1, "
                 f"got {self.overbooking_level!r}"
             )
+
+        for name in ("cancel_timing_a", "cancel_timing_b"):
+            value = getattr(self, name)
+            if not isfinite(value) or value <= 0:
+                raise ValueError(f"{name} must be finite and positive, got {value!r}")
 
         if not isfinite(self.shock_cv) or self.shock_cv < 0:
             raise ValueError(

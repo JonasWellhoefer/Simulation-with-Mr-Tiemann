@@ -69,9 +69,9 @@ Done:
   optimal overbooking level, risk (CVaR), textbook formula vs. simulation, sensitivity,
   convergence
 - Dashboard framework: Streamlit
+- Model assumptions based on real hotel data and industry sources (ASSUMPTIONS.md)
 
 Open:
 - Dashboard: profit vs. overbooking chart and further controls
-- Sources for the model assumptions
 - Presentation
 - Group registration (deadline Nov 9)
