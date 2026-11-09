@@ -72,3 +72,21 @@ hotel booking dataset (see ASSUMPTIONS.md).
 
 *Note: The lecture slides are not meant to be shared outside ISM (see imprint), so they are not included in this repo.*
 
+## Interactive dashboard
+
+Install the dependencies and launch the dashboard from the project folder:
+
+```bash
+python3 -m pip install -r requirements.txt
+python3 -m streamlit run dashboard.py
+```
+
+Choose the room capacity, overbooking allowance, simulation days, number
+of runs, shared no-show shock strength and the market assumptions (booking
+requests, no-show rate, cancellation rate, cost per denied room), then click **Run simulation**.
+
+The dashboard displays average nightly profit (with 95% confidence interval),
+occupancy, nights with denied rooms, a comparison of profit and denial risk
+across overbooking levels with the best level highlighted, a results table and
+a profit chart by simulation run.
+
