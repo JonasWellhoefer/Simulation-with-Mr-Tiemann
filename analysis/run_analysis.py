@@ -15,9 +15,10 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
+from scipy import stats  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from hotel_sim import Params, run_replications  # noqa: E402
+from hotel_sim import Params, run_replications, simulate  # noqa: E402
 from hotel_sim import analytic  # noqa: E402
 
 OUT = Path(__file__).resolve().parent / "output"
@@ -77,6 +78,79 @@ def validation(cfg, report):
     report.append(f"\nLargest deviation in P(denied): {max_dev:.3f}. "
                   f"Exact optimum: {bookings[int(np.argmax(ex_profit))]} bookings, "
                   f"simulated optimum: {bookings[int(np.argmax(sim_profit))]}.\n")
+
+
+# --------------------------------------------------------------------------
+# 1b. Chi-square goodness-of-fit test of the simulated arrivals
+# --------------------------------------------------------------------------
+def merge_small_bins(observed, expected, min_expected=5.0):
+    """Merge neighbouring categories until every expected count is >= 5
+    (rule of thumb for the chi-square test)."""
+    obs_bins, exp_bins = [], []
+    o_acc = e_acc = 0.0
+    for o, e in zip(observed, expected):
+        o_acc += o
+        e_acc += e
+        if e_acc >= min_expected:
+            obs_bins.append(o_acc)
+            exp_bins.append(e_acc)
+            o_acc = e_acc = 0.0
+    if e_acc > 0:                       # remaining right tail joins the last bin
+        obs_bins[-1] += o_acc
+        exp_bins[-1] += e_acc
+    return np.array(obs_bins), np.array(exp_bins)
+
+
+def goodness_of_fit(cfg, report):
+    n_book, p_show = 110, 0.9
+    ks = np.arange(n_book + 1)
+    pmf = stats.binom.pmf(ks, n_book, p_show)
+    cases = [("independent guests", 0.0), ("shared no-show shock, CV=0.3", 0.3)]
+    rows, hist = [], {}
+    for label, cv in cases:
+        params = replace(Params.binomial_baseline(bookings=n_book, show_prob=p_show,
+                                                  n_days=cfg["gof_days"]), shock_cv=cv)
+        res = simulate(params, seed=SEED)
+        assert (res.on_the_books == n_book).all(), "baseline must book exactly N rooms"
+        arrivals = res.occupied + res.denied   # 1-night stays, no walk-ins
+        observed = np.bincount(arrivals, minlength=n_book + 1)
+        obs, exp = merge_small_bins(observed, pmf * len(arrivals))
+        chi2, p_value = stats.chisquare(obs, exp)
+        rows.append((label, len(arrivals), len(obs) - 1, chi2, p_value,
+                     arrivals.mean(), arrivals.var(ddof=1)))
+        hist[label] = observed / len(arrivals)
+
+    fig, ax = plt.subplots(figsize=(8, 4))
+    window = (ks >= 85) & (ks <= 110)
+    width = 0.4
+    for i, (label, _) in enumerate(cases):
+        ax.bar(ks[window] + (i - 0.5) * width, hist[label][window], width=width,
+               alpha=0.7, label=f"Simulated: {label}")
+    ax.plot(ks[window], pmf[window], "k.-", label=f"Binomial({n_book}, {p_show})")
+    ax.axvline(100, ls="--", c="gray", lw=1)
+    ax.set(xlabel="Guests arriving (110 bookings, 100 rooms)", ylabel="Relative frequency",
+           title="Chi-square test: simulated arrivals vs. binomial distribution")
+    ax.legend(fontsize=8)
+    fig.tight_layout()
+    fig.savefig(OUT / "01b_chi_square.png", dpi=150)
+    plt.close(fig)
+
+    report.append("### Chi-square goodness-of-fit test\n")
+    report.append(f"H0: the number of arriving guests per night follows Binomial({n_book}, "
+                  f"{p_show}). Categories with an expected count below 5 are merged; "
+                  "no parameters are estimated, so df = categories - 1.\n")
+    report.append("| Case | Nights | df | Chi-square | p-value | Mean | Variance |")
+    report.append("|---|---:|---:|---:|---:|---:|---:|")
+    for label, n, df, chi2, pv, m, v in rows:
+        pv_txt = f"{pv:.3f}" if pv >= 0.001 else "< 0.001"
+        report.append(f"| {label} | {n} | {df} | {chi2:.1f} | {pv_txt} | {m:.2f} | {v:.2f} |")
+    report.append(f"\nBinomial mean {n_book * p_show:.2f}, variance "
+                  f"{n_book * p_show * (1 - p_show):.2f}. At the 5% level H0 is "
+                  + ("not rejected" if rows[0][4] >= 0.05 else "rejected")
+                  + " for independent guests and "
+                  + ("rejected" if rows[1][4] < 0.05 else "not rejected")
+                  + " when guests share a no-show shock: correlated no-shows make arrivals "
+                  "more variable than the binomial model assumes.\n")
 
 
 # --------------------------------------------------------------------------
@@ -240,9 +314,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--quick", action="store_true", help="fewer runs, for testing")
     args = ap.parse_args()
-    cfg = (dict(runs=4, days=90, val_runs=2, val_days=200, sens_runs=2, conv_runs=8)
+    cfg = (dict(runs=4, days=90, val_runs=2, val_days=200, sens_runs=2, conv_runs=8,
+                gof_days=500)
            if args.quick else
-           dict(runs=20, days=180, val_runs=4, val_days=500, sens_runs=6, conv_runs=40))
+           dict(runs=20, days=180, val_runs=4, val_days=500, sens_runs=6, conv_runs=40,
+                gof_days=3000))
     OUT.mkdir(exist_ok=True)
 
     report = ["# Analysis results\n",
@@ -251,6 +327,8 @@ def main():
               "All prices and rates are model assumptions (see `hotel_sim/params.py`).\n"]
     print("[validation]", flush=True)
     validation(cfg, report)
+    print("[chi-square test]", flush=True)
+    goodness_of_fit(cfg, report)
     print("[optimum and risk]", flush=True)
     rows, levels, _ = optimum_and_risk(cfg, report)
     print("[textbook vs simulation]", flush=True)

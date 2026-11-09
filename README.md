@@ -17,9 +17,10 @@ Deliverables:
 ## Status
 - [ ] Form group (by Nov 9)
 - [x] Choose topic: hotel overbooking (scope: PROPOSAL.md 2.1 + 2.2, interactive dashboard)
-- [ ] Language: mainly Python, possibly Julia
-- [ ] Implement simulation
-- [ ] Validate against analytical values
+- [x] Language: Python
+- [x] Implement simulation (`hotel_sim/`, extensions 2.1 + 2.2)
+- [x] Validate against analytical values (binomial comparison + chi-square test)
+- [ ] Interactive dashboard
 - [ ] Build presentation
 - [ ] Contribution overview per person
 
@@ -52,7 +53,7 @@ python analysis/run_analysis.py           # full run, about 2-3 minutes
 python analysis/run_analysis.py --quick   # low precision, for testing
 ```
 Writes figures and `results.md` to `analysis/output/`:
-1. validation against the exact binomial model
+1. validation against the exact binomial model, incl. a chi-square goodness-of-fit test
 2. optimal overbooking level, denial risk and CVaR, with and without correlated no-shows
 3. textbook binomial formula vs. simulated optimum
 4. sensitivity of the optimal level to no-show rate and denied cost
