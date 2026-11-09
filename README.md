@@ -65,7 +65,7 @@ python3 -m streamlit run dashboard.py
 
 Choose the room capacity, overbooking allowance, simulation days, number
 of runs, shared no-show shock strength and the market assumptions (booking
-requests, no-show rate, cost per denied room), then click **Run simulation**.
+requests, no-show rate, cancellation rate, cost per denied room), then click **Run simulation**.
 
 The dashboard displays average nightly profit (with 95% confidence interval),
 occupancy, nights with denied rooms, a comparison of profit and denial risk

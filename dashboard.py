@@ -13,10 +13,15 @@ CURVE_STEP = 2.5        # % between overbooking levels in the comparison chart
 CURVE_MAX_RUNS = 20     # cap so the comparison stays fast
 
 
-def scale_noshow(params, factor):
-    """Copy of params with every segment's no-show probability scaled."""
+def scale_segments(params, noshow_factor, cancel_factor):
+    """Copy of params with every segment's no-show and cancellation
+    probability scaled."""
     segments = tuple(
-        replace(s, noshow_prob=min(1.0, s.noshow_prob * factor))
+        replace(
+            s,
+            noshow_prob=min(1.0, s.noshow_prob * noshow_factor),
+            cancel_prob=min(1.0, s.cancel_prob * cancel_factor),
+        )
         for s in params.segments
     )
     return replace(params, segments=segments)
@@ -112,12 +117,28 @@ with st.sidebar.form("simulation_settings"):
     )
 
     noshow_factor = st.slider(
-        "No-show rate (relative to default)",
+        "No-show rate (relative to data)",
         min_value=0.5,
-        max_value=2.0,
+        max_value=5.0,
         value=1.0,
         step=0.1,
-        help="Scales the no-show probability of every customer segment.",
+        help=(
+            "Scales the no-show probability of every customer segment "
+            "(about 2% in the hotel data, see ASSUMPTIONS.md)."
+        ),
+    )
+
+    cancel_factor = st.slider(
+        "Cancellation rate (relative to data)",
+        min_value=0.5,
+        max_value=1.5,
+        value=1.0,
+        step=0.05,
+        help=(
+            "Scales the cancellation probability of every customer segment "
+            "(20-47% in the hotel data, see ASSUMPTIONS.md). Fewer kept "
+            "bookings also mean fewer guests."
+        ),
     )
 
     denied_cost = st.number_input(
@@ -132,7 +153,7 @@ with st.sidebar.form("simulation_settings"):
     submitted = st.form_submit_button("Run simulation")
 
 if submitted:
-    params = scale_noshow(
+    params = scale_segments(
         Params(
             capacity=capacity,
             overbooking_level=overbooking_percent / 100,
@@ -142,6 +163,7 @@ if submitted:
             denied_cost=denied_cost,
         ),
         noshow_factor,
+        cancel_factor,
     )
 
     with st.spinner("Running simulation..."):
