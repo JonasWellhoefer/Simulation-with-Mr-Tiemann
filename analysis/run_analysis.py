@@ -30,6 +30,15 @@ def ci_err(res, metric):
     return (hi - lo) / 2
 
 
+def paired_diff(res_a, res_b, metric="mean_profit"):
+    """Mean difference a - b with a 95% CI. Both results come from the same
+    seeds (common random numbers), so run i of a and run i of b share their
+    random numbers and the differences can be paired."""
+    d = res_a[metric]["runs"] - res_b[metric]["runs"]
+    half = 1.96 * d.std(ddof=1) / np.sqrt(len(d))
+    return d.mean(), half
+
+
 def scaled_cancellations(params, factor):
     """Copy of params with every segment's cancellation probability scaled.
     Booking requests are scaled too, so that the number of bookings that are
@@ -199,7 +208,7 @@ def optimum_and_risk(cfg, report):
     report.append(f"Full model (default parameters), {cfg['runs']} runs x {cfg['days']} nights "
                   "per point, same random numbers for every level (common random numbers).\n")
     report.append("| Shock CV | Best level | Profit at best | Profit without overbooking "
-                  "| Gain | P(denied) at best | CVaR 5% at best |")
+                  "| Gain per night (paired 95% CI) | P(denied) at best | CVaR 5% at best |")
     report.append("|---:|---:|---:|---:|---:|---:|---:|")
     best = {}
     for cv in shocks:
@@ -207,10 +216,15 @@ def optimum_and_risk(cfg, report):
         prof = [x["mean_profit"]["mean"] for x in r]
         i = int(np.argmax(prof))
         best[cv] = levels[i]
+        gain, half = paired_diff(r[i], r[0])
         report.append(f"| {cv} | {levels[i]:.1%} | {prof[i]:,.0f} | {prof[0]:,.0f} "
-                      f"| {prof[i] / prof[0] - 1:+.1%} | {r[i]['p_denied']['mean']:.1%} "
-                      f"| {r[i]['cvar_5']:,.0f} |")
-    report.append("")
+                      f"| {gain:+,.0f} ± {half:,.0f} ({gain / prof[0]:+.1%}) "
+                      f"| {r[i]['p_denied']['mean']:.1%} | {r[i]['cvar_5']:,.0f} |")
+    report.append("\nWith the observed no-show rate of about 2%, a shared no-show shock "
+                  "hardly changes the result: cancellations, not no-shows, drive "
+                  "overbooking here. The chi-square test above shows that the shock "
+                  "matters when no-shows are frequent (10%). The profit curve is flat "
+                  "between about 5% and 7.5%.\n")
     return rows, levels, best
 
 
@@ -234,15 +248,17 @@ def naive_vs_simulation(cfg, report, rows, levels):
                   f"{n_star} bookings for {base.capacity} rooms, i.e. overbook by "
                   f"**{naive_level:.1%}**.\n")
     report.append("| Shock CV | Profit at textbook level | Best level (simulation) "
-                  "| Profit at best | Profit lost by using the formula |")
+                  "| Profit at best | Profit lost by using the formula (paired 95% CI) |")
     report.append("|---:|---:|---:|---:|---:|")
     for cv, r in rows.items():
-        naive = run_replications(replace(base, overbooking_level=naive_level, shock_cv=cv),
-                                 n_runs=cfg["runs"], seed=SEED)["mean_profit"]["mean"]
+        naive_res = run_replications(replace(base, overbooking_level=naive_level, shock_cv=cv),
+                                     n_runs=cfg["runs"], seed=SEED)
+        naive = naive_res["mean_profit"]["mean"]
         prof = [x["mean_profit"]["mean"] for x in r]
         i = int(np.argmax(prof))
+        lost, half = paired_diff(r[i], naive_res)
         report.append(f"| {cv} | {naive:,.0f} | {levels[i]:.1%} | {prof[i]:,.0f} "
-                      f"| {prof[i] - naive:,.0f} per night |")
+                      f"| {lost:,.0f} ± {half:,.0f} per night |")
     report.append("\nThe formula ignores cancellations, multi-night stays, groups and "
                   "correlated no-shows, which is why its recommendation differs from "
                   "the simulated optimum.\n")
