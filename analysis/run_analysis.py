@@ -187,17 +187,20 @@ def optimum_and_risk(cfg, report):
     for cv in shocks:
         r = rows[cv]
         lab = "independent" if cv == 0 else f"shared shock CV={cv}"
-        ax[0].errorbar(levels * 100, [x["mean_profit"]["mean"] for x in r],
-                       yerr=[ci_err(x, "mean_profit") for x in r], marker="o", ms=3,
-                       capsize=2, label=lab)
-        ax[1].plot(levels * 100, [x["p_denied"]["mean"] for x in r], marker="o", ms=3, label=lab)
-        ax[2].plot(levels * 100, [x["cvar_5"] for x in r], marker="o", ms=3, label=lab)
-    ax[0].set(xlabel="Overbooking level (%)", ylabel="Mean profit per night",
-              title="Profit (95% CI)")
-    ax[1].set(xlabel="Overbooking level (%)", ylabel="Share of nights with denied guests",
+        gains = [paired_diff(x, r[0]) for x in r]
+        ax[0].errorbar(levels * 100, [g for g, _ in gains], yerr=[h for _, h in gains],
+                       marker="o", ms=3, capsize=2, label=lab)
+        ax[1].plot(levels * 100, [x["p_denied"]["mean"] * 100 for x in r], marker="o", ms=3,
+                   label=lab)
+        ax[2].plot(levels * 100, [x["mean_occupancy"]["mean"] * 100 for x in r], marker="o",
+                   ms=3, label=lab)
+    ax[0].axhline(0, c="gray", lw=1)
+    ax[0].set(xlabel="Overbooking level (%)", ylabel="Profit gain per night",
+              title="Gain vs. no overbooking (paired 95% CI)")
+    ax[1].set(xlabel="Overbooking level (%)", ylabel="Nights with denied guests (%)",
               title="Denial risk")
-    ax[2].set(xlabel="Overbooking level (%)", ylabel="CVaR 5% of nightly profit",
-              title="Bad nights (mean of worst 5%)")
+    ax[2].set(xlabel="Overbooking level (%)", ylabel="Average occupancy (%)",
+              title="Occupancy")
     for a in ax:
         a.legend(fontsize=8)
     fig.tight_layout()
@@ -224,7 +227,9 @@ def optimum_and_risk(cfg, report):
                   "hardly changes the result: cancellations, not no-shows, drive "
                   "overbooking here. The chi-square test above shows that the shock "
                   "matters when no-shows are frequent (10%). The profit curve is flat "
-                  "between about 5% and 7.5%.\n")
+                  "between about 5% and 7.5%. The CVaR (mean of the 5% worst nights) "
+                  "hardly depends on overbooking, because the worst nights are "
+                  "low-demand nights in which overbooking plays no role.\n")
     return rows, levels, best
 
 
