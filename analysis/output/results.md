@@ -8,63 +8,76 @@ Simplified case: 1-night stays, single rooms, no cancellations, independent gues
 
 | Bookings | Profit sim | Profit exact | P(denied) sim | P(denied) exact |
 |---:|---:|---:|---:|---:|
-| 100 | 10,802 | 10,800 | 0.000 | 0.000 |
-| 102 | 11,020 | 11,016 | 0.000 | 0.000 |
-| 104 | 11,241 | 11,229 | 0.004 | 0.006 |
-| 106 | 11,430 | 11,425 | 0.049 | 0.040 |
-| 108 | 11,567 | 11,563 | 0.146 | 0.143 |
-| 110 | 11,593 | 11,587 | 0.346 | 0.329 |
-| 112 | 11,473 | 11,463 | 0.556 | 0.554 |
-| 114 | 11,207 | 11,202 | 0.740 | 0.752 |
-| 116 | 10,846 | 10,844 | 0.876 | 0.884 |
-| 118 | 10,422 | 10,431 | 0.955 | 0.954 |
-| 120 | 10,050 | 9,995 | 0.979 | 0.984 |
+| 100 | 10,801 | 10,800 | 0.000 | 0.000 |
+| 102 | 11,019 | 11,016 | 0.001 | 0.000 |
+| 104 | 11,220 | 11,229 | 0.007 | 0.006 |
+| 106 | 11,436 | 11,425 | 0.039 | 0.040 |
+| 108 | 11,570 | 11,563 | 0.146 | 0.143 |
+| 110 | 11,590 | 11,587 | 0.344 | 0.329 |
+| 112 | 11,459 | 11,463 | 0.541 | 0.554 |
+| 114 | 11,214 | 11,202 | 0.753 | 0.752 |
+| 116 | 10,825 | 10,844 | 0.891 | 0.884 |
+| 118 | 10,447 | 10,431 | 0.955 | 0.954 |
+| 120 | 10,000 | 9,995 | 0.986 | 0.984 |
 
-Largest deviation in P(denied): 0.017. Exact optimum: 110 bookings, simulated optimum: 110.
+Largest deviation in P(denied): 0.015. Exact optimum: 110 bookings, simulated optimum: 110.
+
+### Chi-square goodness-of-fit test
+
+H0: the number of arriving guests per night follows Binomial(110, 0.9). Categories with an expected count below 5 are merged; no parameters are estimated, so df = categories - 1.
+
+| Case | Nights | df | Chi-square | p-value | Mean | Variance |
+|---|---:|---:|---:|---:|---:|---:|
+| independent guests | 3000 | 18 | 21.6 | 0.251 | 98.98 | 9.70 |
+| shared no-show shock, CV=0.3 | 3000 | 18 | 2302.5 | < 0.001 | 99.03 | 21.32 |
+
+Binomial mean 99.00, variance 9.90. At the 5% level H0 is not rejected for independent guests and rejected when guests share a no-show shock: correlated no-shows make arrivals more variable than the binomial model assumes.
 
 ## 2. Optimal overbooking level and risk
 
 Full model (default parameters), 20 runs x 180 nights per point, same random numbers for every level (common random numbers).
 
-| Shock CV | Best level | Profit at best | Profit without overbooking | Gain | P(denied) at best | CVaR 5% at best |
+| Shock CV | Best level | Profit at best | Profit without overbooking | Gain per night (paired 95% CI) | P(denied) at best | CVaR 5% at best |
 |---:|---:|---:|---:|---:|---:|---:|
-| 0.0 | 15.0% | 10,910 | 9,963 | +9.5% | 20.1% | 9,308 |
-| 0.3 | 15.0% | 10,882 | 9,971 | +9.1% | 20.8% | 9,252 |
-| 0.6 | 15.0% | 10,799 | 9,982 | +8.2% | 22.9% | 9,094 |
+| 0.0 | 5.0% | 7,236 | 7,187 | +49 ± 8 (+0.7%) | 2.4% | 4,197 |
+| 0.3 | 5.0% | 7,237 | 7,191 | +47 ± 7 (+0.6%) | 2.1% | 4,178 |
+| 0.6 | 7.5% | 7,235 | 7,187 | +47 ± 10 (+0.7%) | 3.2% | 4,167 |
+
+With the observed no-show rate of about 2%, a shared no-show shock hardly changes the result: cancellations, not no-shows, drive overbooking here. The chi-square test above shows that the shock matters when no-shows are frequent (10%). The profit curve is flat between about 5% and 7.5%. The CVaR (mean of the 5% worst nights) hardly depends on overbooking, because the worst nights are low-demand nights in which overbooking plays no role.
 
 ## 3. Textbook formula vs. simulation
 
-A manager using the binomial formula with the observed show-up rate (89.1%) and the average price (116) would accept 110 bookings for 100 rooms, i.e. overbook by **10.0%**.
+A manager using the binomial formula with the observed show-up rate (98.1%) and the average price (99) would accept 101 bookings for 100 rooms, i.e. overbook by **1.0%**.
 
-| Shock CV | Profit at textbook level | Best level (simulation) | Profit at best | Profit lost by using the formula |
+| Shock CV | Profit at textbook level | Best level (simulation) | Profit at best | Profit lost by using the formula (paired 95% CI) |
 |---:|---:|---:|---:|---:|
-| 0.0 | 10,773 | 15.0% | 10,910 | 137 per night |
-| 0.3 | 10,762 | 15.0% | 10,882 | 120 per night |
-| 0.6 | 10,713 | 15.0% | 10,799 | 86 per night |
+| 0.0 | 7,206 | 5.0% | 7,236 | 31 ± 9 per night |
+| 0.3 | 7,208 | 5.0% | 7,237 | 30 ± 7 per night |
+| 0.6 | 7,205 | 7.5% | 7,235 | 30 ± 9 per night |
 
 The formula ignores cancellations, multi-night stays, groups and correlated no-shows, which is why its recommendation differs from the simulated optimum.
 
 ## 4. Sensitivity of the optimal overbooking level
 
-Grid search over levels 0-40% in 5% steps, 6 runs per point.
+Grid search over levels 0-30% in 2.5% steps, 6 runs per point. The cancellation rate is varied because it drives overbooking far more than the no-show rate (~2% in the data). Booking requests are scaled so that the number of non-cancelled bookings stays the same.
 
-| Denied cost \ no-show factor | x0.5 | x1.0 | x1.5 | x2.0 |
-|---:|---:|---:|---:|---:|
-| 100 | 15% | 20% | 30% | 40% |
-| 250 | 10% | 15% | 25% | 30% |
-| 500 | 5% | 15% | 20% | 30% |
-| 1000 | 5% | 10% | 20% | 25% |
+| Denied cost \ cancellation factor | x0.5 | x0.75 | x1.0 | x1.25 | x1.5 |
+|---:|---:|---:|---:|---:|---:|
+| 100 | 5.0% | 5.0% | 12.5% | 12.5% | 27.5% |
+| 250 | 2.5% | 5.0% | 7.5% | 10.0% | 17.5% |
+| 500 | 2.5% | 2.5% | 5.0% | 7.5% | 15.0% |
+| 1000 | 2.5% | 2.5% | 2.5% | 5.0% | 12.5% |
 
-More no-shows push the optimal level up, higher compensation costs push it down.
+More cancellations push the optimal level up, higher compensation costs push it down.
 
 ## 5. Convergence
 
 | Runs | Mean profit | 95% CI half-width |
 |---:|---:|---:|
-| 5 | 10,926 | ±57 |
-| 10 | 10,913 | ±30 |
-| 20 | 10,910 | ±25 |
-| 40 | 10,922 | ±17 |
+| 5 | 7,229 | ±90 |
+| 10 | 7,264 | ±62 |
+| 20 | 7,236 | ±43 |
+| 40 | 7,257 | ±34 |
 
 The half-width shrinks roughly with 1/sqrt(runs).
 
