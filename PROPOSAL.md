@@ -1,6 +1,6 @@
 # Project Proposal: Hotel Overbooking Simulation
 
-*Status: scope agreed with the team – nothing in here is implemented yet.*
+*Status: scope agreed with the team; 2.1 and 2.2 are implemented in `hotel_sim/`, the analysis in `analysis/`, the dashboard is in progress (see section 7).*
 
 ## 1. Motivation and added value
 Hotels sell more rooms than they have because some guests do not show up. Too little
@@ -8,8 +8,8 @@ overbooking leaves rooms empty; too much forces the hotel to turn guests away an
 compensation. The question is: **how many bookings should a hotel accept to maximise
 expected profit at an acceptable risk?**
 
-The current baseline (already in the repo) models a single night with independent guests,
-so arrivals ~ Binomial(N, p). It can be solved exactly, which makes it a good **validation
+The simplest version of the model (`Params.binomial_baseline()`) covers a single night with
+independent guests, so arrivals ~ Binomial(N, p). It can be solved exactly, which makes it a good **validation
 case** but not a convincing reason to simulate. The extensions below move to settings
 where no closed-form solution exists, so simulation adds real value.
 
@@ -61,8 +61,17 @@ exact binomial results. Extensions are compared against this baseline to quantif
 | Code: simulation model, dashboard | Jonas, Vrinda |
 | Presentation | Viveca |
 
-## 7. Still open
-- Split of the code work between the two developers (model vs. dashboard)
-- Dashboard framework (e.g. Streamlit)
-- Shared interface between model and dashboard (parameters in, results out)
+## 7. Status
+Done:
+- Model core for 2.1 and 2.2 (`hotel_sim/`), input validation and tests
+- Shared interface for the dashboard: `Params` in, `simulate` / `run_replications` / `sweep` out
+- Analysis (`analysis/`): validation against the binomial model incl. chi-square test,
+  optimal overbooking level, risk (CVaR), textbook formula vs. simulation, sensitivity,
+  convergence
+- Dashboard framework: Streamlit
+- Model assumptions based on real hotel data and industry sources (ASSUMPTIONS.md)
+
+Open:
+- Dashboard: profit vs. overbooking chart and further controls
+- Presentation
 - Group registration (deadline Nov 9)

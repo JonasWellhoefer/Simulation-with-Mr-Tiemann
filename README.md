@@ -17,9 +17,11 @@ Deliverables:
 ## Status
 - [ ] Form group (by Nov 9)
 - [x] Choose topic: hotel overbooking (scope: PROPOSAL.md 2.1 + 2.2, interactive dashboard)
-- [ ] Language: mainly Python, possibly Julia
-- [ ] Implement simulation
-- [ ] Validate against analytical values
+- [x] Language: Python
+- [x] Implement simulation (`hotel_sim/`, extensions 2.1 + 2.2)
+- [x] Validate against analytical values (binomial comparison + chi-square test)
+- [x] Sources for the model assumptions (ASSUMPTIONS.md)
+- [ ] Interactive dashboard
 - [ ] Build presentation
 - [ ] Contribution overview per person
 
@@ -39,12 +41,28 @@ run = simulate(params, seed=1)           # nightly arrays: occupied, denied, pro
 study = run_replications(params, 30)     # means, 95% CIs, VaR/CVaR of nightly profit
 curve = sweep(params, "overbooking_level", [0, .05, .1, .15, .2])
 ```
-- `params.py` – all inputs (`Params`, customer `Segment`s); dashboard sliders map 1:1 to fields
+- `params.py` – all inputs (`Params`, customer `Segment`s); dashboard sliders map 1:1 to fields.
+  Default values and their sources: [ASSUMPTIONS.md](ASSUMPTIONS.md)
 - `model.py` – event-based simulation (2.1 booking/cancellation dynamics, multi-night stays,
   walk-ins; 2.2 segments, groups, shared no-show shock `shock_cv`)
 - `experiments.py` – replications with confidence intervals, risk measures, parameter sweeps
 - `analytic.py` + `Params.binomial_baseline()` – the degenerate case reproduces the exact
   binomial results (validation test in `tests/`)
+
+## Analysis (`analysis/`)
+```
+python analysis/run_analysis.py           # full run, about 2-3 minutes
+python analysis/run_analysis.py --quick   # low precision, for testing
+```
+Writes figures and `results.md` to `analysis/output/`:
+1. validation against the exact binomial model, incl. a chi-square goodness-of-fit test
+2. optimal overbooking level, denial risk and CVaR, with and without correlated no-shows
+3. textbook binomial formula vs. simulated optimum
+4. sensitivity of the optimal level to no-show rate and denied cost
+5. convergence of the estimate over the number of runs
+
+`analysis/calibrate_from_data.py` reproduces the segment parameters from the public
+hotel booking dataset (see ASSUMPTIONS.md).
 
 ## Contributions
 | Person | Tasks |
