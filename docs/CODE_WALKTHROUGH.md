@@ -1,4 +1,4 @@
-# Code Walkthrough – Presenter Guide
+# Code Walkthrough – Presenter Guide 
 
 This guide is for the person presenting the code (Viveca). It explains the code in plain
 language, says what to show on screen and what to say, and prepares answers to likely
